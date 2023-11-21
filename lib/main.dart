@@ -1,8 +1,7 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:http/http.dart' as http;
+import 'package:http/http.dart';
+import 'package:udemy1/api/advice_api.dart';
 import 'package:udemy1/model/advice.dart';
 
 void main() {
@@ -34,11 +33,13 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   late Advice advice;
+  late Future getAdvice;
 
   @override
   void initState() {
     super.initState();
-    _getAdvice().then((value) {
+    getAdvice = AdviceApi(Client()).getAdvice();
+    getAdvice.then((value) {
       setState(() {
         advice = value;
       });
@@ -48,7 +49,7 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: HSLColor.fromAHSL(1, 217, 0.19, 0.24).toColor(),
+      backgroundColor: const HSLColor.fromAHSL(1, 217, 0.19, 0.24).toColor(),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
       ),
@@ -60,12 +61,12 @@ class _MyHomePageState extends State<MyHomePage> {
             Container(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(15),
-                  color: HSLColor.fromAHSL(1, 217, 0.19, 0.38).toColor(),
+                  color: const HSLColor.fromAHSL(1, 217, 0.19, 0.38).toColor(),
                 ),
                 height: 300,
                 width: 350,
                 child: FutureBuilder(
-                  future: _getAdvice(),
+                  future: getAdvice,
                   builder: (context, snapshot) {
                     if (snapshot.hasData) {
                       return Padding(
@@ -73,28 +74,30 @@ class _MyHomePageState extends State<MyHomePage> {
                         child: Column(
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
-                              Spacer(
+                              const Spacer(
                                 flex: 2,
                               ),
                               Text(
                                 "ADVICE # ${advice.id.toString()}",
                                 style: TextStyle(
-                                    color: HSLColor.fromAHSL(1, 150, 1, 0.66)
-                                        .toColor()),
+                                    color:
+                                        const HSLColor.fromAHSL(1, 150, 1, 0.66)
+                                            .toColor()),
                               ),
-                              Spacer(
+                              const Spacer(
                                 flex: 2,
                               ),
                               Text(
                                 " \"${advice.body}\"",
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
-                                    color: HSLColor.fromAHSL(1, 193, 0.38, 0.86)
+                                    color: const HSLColor.fromAHSL(
+                                            1, 193, 0.38, 0.86)
                                         .toColor(),
                                     fontSize: 28,
                                     fontWeight: FontWeight.w800),
                               ),
-                              Spacer(
+                              const Spacer(
                                 flex: 2,
                               ),
                               Row(
@@ -103,7 +106,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                   Expanded(
                                       child: Divider(
                                           thickness: 2,
-                                          color: HSLColor.fromAHSL(
+                                          color: const HSLColor.fromAHSL(
                                                   1, 218, 0.23, 0.16)
                                               .toColor())),
                                   SvgPicture.asset(
@@ -111,21 +114,20 @@ class _MyHomePageState extends State<MyHomePage> {
                                   Expanded(
                                       child: Divider(
                                           thickness: 2,
-                                          color: HSLColor.fromAHSL(
+                                          color: const HSLColor.fromAHSL(
                                                   1, 218, 0.23, 0.16)
                                               .toColor())),
                                 ],
                               ),
-                              SizedBox(
+                              const SizedBox(
                                 height: 50,
                               )
                             ]),
                       );
-                    }
-                    if (snapshot.hasError) {
+                    } else if (snapshot.hasError) {
                       return Text(snapshot.error.toString());
                     } else {
-                      return CircularProgressIndicator();
+                      return const CircularProgressIndicator();
                     }
                   },
                 )),
@@ -134,8 +136,7 @@ class _MyHomePageState extends State<MyHomePage> {
               child: GestureDetector(
                   behavior: HitTestBehavior.opaque,
                   onTap: () {
-                    print("from red");
-                    _getAdvice().then((value) {
+                    AdviceApi(Client()).getAdvice().then((value) {
                       setState(() {
                         advice = value;
                       });
@@ -144,7 +145,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   child: CircleAvatar(
                     radius: 45,
                     backgroundColor:
-                        HSLColor.fromAHSL(1, 150, 1, 0.66).toColor(),
+                        const HSLColor.fromAHSL(1, 150, 1, 0.66).toColor(),
                     child: SvgPicture.asset(
                       "images/icon-dice.svg",
                       height: 35,
@@ -155,16 +156,5 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
       ),
     );
-  }
-
-  Future<Advice> _getAdvice() async {
-    const url = "https://api.adviceslip.com/advice";
-    final uri = Uri.parse(url);
-    final response = await http.get(uri);
-    final body = response.body;
-    final json = jsonDecode(body)['slip'];
-    Advice gotAdvice = Advice(id: json['id'], body: json['advice']);
-
-    return gotAdvice;
   }
 }
